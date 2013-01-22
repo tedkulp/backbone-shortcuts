@@ -9,6 +9,9 @@
 
   _.extend(Shortcuts.prototype, Backbone.Events, {
     initialize: function() {},
+    trim: function(string) {
+      return string.replace(/^\s+|\s+$/g, '');
+    },
     delegateShortcuts: function() {
       var callback, match, method, scope, shortcut, shortcutKey, _ref, _results;
       if (!this.shortcuts) return;
@@ -19,10 +22,15 @@
         if (!_.isFunction(callback)) method = this[callback];
         if (!method) throw new Error("Method " + callback + " does not exist");
         match = shortcut.match(/^(\S+)\s*(.*)$/);
-        shortcutKey = match[1];
+        shortcutKey = this.trim(match[1]);
         scope = match[2] === "" ? "all" : match[2];
         method = _.bind(method, this);
-        _results.push(key(shortcutKey, scope, method));
+        seqMatch = shortcutKey.match(/^\[(.*)\]$/);
+        if (seqMatch) {
+          _results.push(key.sequence(seqMatch[1].split(','), scope, method));
+        } else {
+          _results.push(key(shortcutKey, scope, method));
+        }
       }
       return _results;
     }
